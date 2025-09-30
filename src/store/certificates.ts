@@ -2,35 +2,30 @@ import { defineStore } from 'pinia'
 import { supabase } from '@/utils/supabase'
 import { ref } from 'vue'
 
-type Product = {
+type Certificate = {
   id: string
   name: string
   image: string
-  category_id: string
+  description_id: string
+  description_en: string
   slug: string
-  description: string
-  category: Category
 }
 
-type Category = {
-  name: string
-}
+const TABLE_NAME = 'certificates'
+const BUCKET_NAME = 'certificate-bucket'
 
-const TABLE_NAME = 'products'
-const BUCKET_NAME = 'product-bucket'
-
-export const useProductStore = defineStore('products', () => {
-  const products = ref<Product[]>([])
-  const product = ref<Product>()
+export const useCertificateStore = defineStore('certificates', () => {
+  const certificates = ref<Certificate[]>([])
+  const certificate = ref<Certificate>()
 
   const fetch = async () => {
-    const { data, error } = await supabase.from(TABLE_NAME).select('*, category:category_id(name)')
+    const { data, error } = await supabase.from(TABLE_NAME).select('*')
 
     if (error) {
       throw error
     }
 
-    products.value = data
+    certificates.value = data
   }
 
   const show = async (id: string) => {
@@ -40,23 +35,23 @@ export const useProductStore = defineStore('products', () => {
       throw error
     }
 
-    product.value = data
+    certificate.value = data
   }
 
   const add = async (
     payload: {
       name: string
       slug: string
-      category_id: string
-      description: string
+      description_id: string
+      description_en: string
     },
     file: { path: string; file: File | null },
   ) => {
     const input = {
       name: payload.name,
       slug: payload.slug,
-      description: payload.description,
-      category_id: payload.category_id,
+      description_id: payload.description_id,
+      description_en: payload.description_en,
       image: '',
     }
 
@@ -78,8 +73,8 @@ export const useProductStore = defineStore('products', () => {
     payload: {
       name: string
       slug: string
-      category_id: string
-      description: string
+      description_id: string
+      description_en: string
       image: string | null
     },
     file: { path: string; file: File | null },
@@ -87,8 +82,8 @@ export const useProductStore = defineStore('products', () => {
     const input = {
       name: payload.name,
       slug: payload.slug,
-      description: payload.description,
-      category_id: payload.category_id,
+      description_id: payload.description_id,
+      description_en: payload.description_en,
       image: payload.image,
     }
 
@@ -115,8 +110,8 @@ export const useProductStore = defineStore('products', () => {
   }
 
   return {
-    products,
-    product,
+    certificates,
+    certificate,
     fetch,
     show,
     add,

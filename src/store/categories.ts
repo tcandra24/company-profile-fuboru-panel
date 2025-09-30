@@ -8,12 +8,14 @@ type Category = {
   slug: string
 }
 
+const TABLE_NAME = 'categories'
+
 export const useCategoryStore = defineStore('category', () => {
   const categories = ref<Category[]>([])
-  const category = ref<Category>({})
+  const category = ref<Category>()
 
   const fetch = async () => {
-    const { data, error } = await supabase.from('categories').select()
+    const { data, error } = await supabase.from(TABLE_NAME).select()
 
     if (error) {
       throw error
@@ -23,12 +25,7 @@ export const useCategoryStore = defineStore('category', () => {
   }
 
   const show = async (id: string) => {
-    const { data, error } = await supabase
-      .from('categories')
-      .select()
-      .eq('id', id)
-      .limit(1)
-      .single()
+    const { data, error } = await supabase.from(TABLE_NAME).select().eq('id', id).limit(1).single()
 
     if (error) {
       throw error
@@ -38,7 +35,7 @@ export const useCategoryStore = defineStore('category', () => {
   }
 
   const add = async (name: string, slug: string) => {
-    await supabase.from('categories').insert({
+    await supabase.from(TABLE_NAME).insert({
       name,
       slug,
     })
@@ -46,7 +43,7 @@ export const useCategoryStore = defineStore('category', () => {
 
   const update = async (id: string, payload: { name: string; slug: string }) => {
     await supabase
-      .from('categories')
+      .from(TABLE_NAME)
       .update({
         name: payload.name,
         slug: payload.slug,
@@ -55,7 +52,7 @@ export const useCategoryStore = defineStore('category', () => {
   }
 
   const destroy = async (id: string) => {
-    await supabase.from('categories').delete().eq('id', id)
+    await supabase.from(TABLE_NAME).delete().eq('id', id)
   }
 
   return {

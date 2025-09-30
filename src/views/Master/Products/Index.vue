@@ -16,7 +16,7 @@ import { ucwords } from '@/utils/helpers'
 
 import { useProductStore } from '@/store/products'
 
-const currentPageTitle = ref('Categories')
+const currentPageTitle = ref('Products')
 
 const store = useProductStore()
 
