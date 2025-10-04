@@ -114,9 +114,10 @@ onMounted(() => {
                 <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ product.slug }}</p>
               </td>
               <td class="px-5 py-4 sm:px-6">
-                <p class="text-gray-500 text-theme-sm dark:text-gray-400">
-                  {{ product.description }}
-                </p>
+                <p
+                  class="text-gray-500 text-theme-sm dark:text-gray-400"
+                  v-html="product.description"
+                ></p>
               </td>
               <td class="px-5 py-4 sm:px-6">
                 <Menu as="div" class="relative inline-block">

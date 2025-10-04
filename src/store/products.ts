@@ -10,13 +10,26 @@ type Product = {
   slug: string
   description: string
   category: Category
+  socials: Social[]
 }
 
 type Category = {
   name: string
 }
 
+interface Social {
+  id: string
+  name: string
+  link: string
+  embeded_code: string
+}
+
+interface SocialInput extends Omit<Social, 'id'> {
+  product_id: string
+}
+
 const TABLE_NAME = 'products'
+const SOCIAL_TABLE_NAME = 'socials'
 const BUCKET_NAME = 'product-bucket'
 
 export const useProductStore = defineStore('products', () => {
@@ -34,7 +47,12 @@ export const useProductStore = defineStore('products', () => {
   }
 
   const show = async (id: string) => {
-    const { data, error } = await supabase.from(TABLE_NAME).select().eq('id', id).limit(1).single()
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*, socials(id, name, link, embeded_code)')
+      .eq('id', id)
+      .limit(1)
+      .single()
 
     if (error) {
       throw error
@@ -49,6 +67,7 @@ export const useProductStore = defineStore('products', () => {
       slug: string
       category_id: string
       description: string
+      socials: Social[]
     },
     file: { path: string; file: File | null },
   ) => {
@@ -70,7 +89,22 @@ export const useProductStore = defineStore('products', () => {
       input.image = data.path
     }
 
-    await supabase.from(TABLE_NAME).insert(input)
+    const { data } = await supabase.from(TABLE_NAME).insert(input).select('id').single()
+
+    let inputSocial: SocialInput[] = []
+    for (const social of payload.socials) {
+      inputSocial = [
+        ...inputSocial,
+        {
+          product_id: data?.id,
+          name: social.name,
+          link: social.link,
+          embeded_code: social.embeded_code,
+        },
+      ]
+    }
+
+    await supabase.from(SOCIAL_TABLE_NAME).insert(inputSocial)
   }
 
   const update = async (
@@ -81,6 +115,7 @@ export const useProductStore = defineStore('products', () => {
       category_id: string
       description: string
       image: string | null
+      socials: Social[]
     },
     file: { path: string; file: File | null },
   ) => {
@@ -107,11 +142,29 @@ export const useProductStore = defineStore('products', () => {
     }
 
     await supabase.from(TABLE_NAME).update(input).eq('id', id)
+    await supabase.from(SOCIAL_TABLE_NAME).delete().eq('product_id', id)
+
+    let inputSocial: SocialInput[] = []
+    for (const social of payload.socials) {
+      inputSocial = [
+        ...inputSocial,
+        {
+          product_id: id,
+          name: social.name,
+          link: social.link,
+          embeded_code: social.embeded_code,
+        },
+      ]
+    }
+
+    await supabase.from(SOCIAL_TABLE_NAME).insert(inputSocial)
   }
 
   const destroy = async (id: string, image: string) => {
     await supabase.storage.from(BUCKET_NAME).remove([image])
     await supabase.from(TABLE_NAME).delete().eq('id', id)
+
+    await supabase.from(SOCIAL_TABLE_NAME).delete().eq('product_id', id)
   }
 
   return {
