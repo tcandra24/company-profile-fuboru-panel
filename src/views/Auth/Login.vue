@@ -146,8 +146,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useField, useForm } from 'vee-validate'
-import { toTypedSchema } from '@vee-validate/zod'
-import * as zod from 'zod'
+
+import { validationSchema } from '@/validation/auth/login'
 
 import { useAuthStore } from '@/store/auth'
 
@@ -161,16 +161,6 @@ const errorResponse = ref('')
 const router = useRouter()
 
 const storeAuth = useAuthStore()
-
-const validationSchema = toTypedSchema(
-  zod.object({
-    email: zod
-      .string()
-      .min(1, { message: 'This is required' })
-      .email({ message: 'Must be a valid email' }),
-    password: zod.string().min(1, { message: 'This is required' }).min(8, { message: 'Too short' }),
-  }),
-)
 
 const { handleSubmit, errors } = useForm({
   validationSchema,
