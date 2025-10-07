@@ -9,6 +9,7 @@ type Product = {
   category_id: string
   slug: string
   description: string
+  advantage: string
   category: Category
   socials: Social[]
 }
@@ -67,6 +68,7 @@ export const useProductStore = defineStore('products', () => {
       slug: string
       category_id: string
       description: string
+      advantage: string
       socials: Social[]
     },
     file: { path: string; file: File | null },
@@ -75,6 +77,7 @@ export const useProductStore = defineStore('products', () => {
       name: payload.name,
       slug: payload.slug,
       description: payload.description,
+      advantage: payload.advantage,
       category_id: payload.category_id,
       image: '',
     }
@@ -114,6 +117,7 @@ export const useProductStore = defineStore('products', () => {
       slug: string
       category_id: string
       description: string
+      advantage: string
       image: string | null
       socials: Social[]
     },
@@ -123,6 +127,7 @@ export const useProductStore = defineStore('products', () => {
       name: payload.name,
       slug: payload.slug,
       description: payload.description,
+      advantage: payload.advantage,
       category_id: payload.category_id,
       image: payload.image,
     }

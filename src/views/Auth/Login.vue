@@ -18,7 +18,15 @@
                 </p>
               </div>
               <div>
-                <form @submit.prevent="handleSubmit">
+                <Alert
+                  v-if="errorResponse"
+                  variant="error"
+                  title="Error Message"
+                  :message="errorResponse"
+                  :showLink="false"
+                  class="my-4"
+                />
+                <form @submit.prevent="onSubmit">
                   <div class="space-y-5">
                     <!-- Email -->
                     <div>
@@ -35,7 +43,12 @@
                         name="email"
                         placeholder="info@gmail.com"
                         class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                        :class="{
+                          'border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-800':
+                            errors.email,
+                        }"
                       />
+                      <p class="mt-1.5 text-theme-xs text-error-500">{{ errors.email }}</p>
                     </div>
                     <!-- Password -->
                     <div>
@@ -52,7 +65,12 @@
                           id="password"
                           placeholder="Enter your password"
                           class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-4 pr-11 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+                          :class="{
+                            'border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-800':
+                              errors.password,
+                          }"
                         />
+                        <p class="mt-1.5 text-theme-xs text-error-500">{{ errors.password }}</p>
                         <span
                           @click="togglePasswordVisibility"
                           class="absolute z-30 text-gray-500 -translate-y-1/2 cursor-pointer right-4 top-1/2 dark:text-gray-400"
@@ -92,51 +110,6 @@
                         </span>
                       </div>
                     </div>
-                    <!-- Checkbox -->
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <label
-                          for="keepLoggedIn"
-                          class="flex items-center text-sm font-normal text-gray-700 cursor-pointer select-none dark:text-gray-400"
-                        >
-                          <div class="relative">
-                            <input
-                              v-model="keepLoggedIn"
-                              type="checkbox"
-                              id="keepLoggedIn"
-                              class="sr-only"
-                            />
-                            <div
-                              :class="
-                                keepLoggedIn
-                                  ? 'border-brand-500 bg-brand-500'
-                                  : 'bg-transparent border-gray-300 dark:border-gray-700'
-                              "
-                              class="mr-3 flex h-5 w-5 items-center justify-center rounded-md border-[1.25px]"
-                            >
-                              <span :class="keepLoggedIn ? '' : 'opacity-0'">
-                                <svg
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 14 14"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    d="M11.6666 3.5L5.24992 9.91667L2.33325 7"
-                                    stroke="white"
-                                    stroke-width="1.94437"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                  />
-                                </svg>
-                              </span>
-                            </div>
-                          </div>
-                          Keep me logged in
-                        </label>
-                      </div>
-                    </div>
                     <!-- Button -->
                     <div>
                       <button
@@ -172,31 +145,59 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useField, useForm } from 'vee-validate'
+import { toTypedSchema } from '@vee-validate/zod'
+import * as zod from 'zod'
 
 import { useAuthStore } from '@/store/auth'
 
 import CommonGridShape from '@/components/common/CommonGridShape.vue'
 import FullScreenLayout from '@/components/layout/FullScreenLayout.vue'
-const email = ref('')
-const password = ref('')
+import Alert from '@/components/ui/Alert.vue'
+
 const showPassword = ref(false)
-const keepLoggedIn = ref(false)
+const errorResponse = ref('')
 
 const router = useRouter()
 
 const storeAuth = useAuthStore()
 
+const validationSchema = toTypedSchema(
+  zod.object({
+    email: zod
+      .string()
+      .min(1, { message: 'This is required' })
+      .email({ message: 'Must be a valid email' }),
+    password: zod.string().min(1, { message: 'This is required' }).min(8, { message: 'Too short' }),
+  }),
+)
+
+const { handleSubmit, errors } = useForm({
+  validationSchema,
+})
+
+const { value: email } = useField('email')
+const { value: password } = useField('password')
+
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value
 }
 
-const handleSubmit = async () => {
+const onSubmit = handleSubmit(async (values, { resetForm }) => {
   try {
-    await storeAuth.login(email.value, password.value)
+    errorResponse.value = ''
+
+    await storeAuth.login(values.email, values.password)
 
     router.push({ name: 'dashboard.index' })
   } catch (error: unknown) {
-    console.log(error)
+    if (error instanceof Error) {
+      errorResponse.value = error.message
+    } else {
+      console.log(error)
+    }
+  } finally {
+    resetForm()
   }
-}
+})
 </script>

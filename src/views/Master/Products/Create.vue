@@ -37,6 +37,7 @@ type Input = {
   image: File | null
   category_id: string
   description: string
+  advantage: string
   socials: Social[]
 }
 
@@ -50,6 +51,7 @@ const form = reactive<Input>({
   image: null,
   category_id: '',
   description: '',
+  advantage: '',
   socials: [],
 })
 
@@ -80,6 +82,7 @@ const onSubmit = async () => {
         slug: form.slug,
         category_id: form.category_id,
         description: form.description,
+        advantage: form.advantage,
         socials: form.socials,
       },
       { path: filePath, file: form.image },
@@ -142,6 +145,8 @@ onMounted(() => {
             <ComponentInput title="Slug" v-model="form.slug" />
 
             <ComponentEditor title="Description" v-model="form.description" />
+
+            <ComponentEditor title="Advantage" v-model="form.advantage" />
 
             <ComponentFile title="Upload Image" @input="handleImageChange" />
 

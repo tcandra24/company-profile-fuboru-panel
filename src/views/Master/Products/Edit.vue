@@ -40,6 +40,7 @@ type Input = {
   image: File | null
   category_id: string
   description: string
+  advantage: string
   socials: Social[]
 }
 
@@ -53,6 +54,7 @@ const form = reactive<Input>({
   image: null,
   category_id: '',
   description: '',
+  advantage: '',
   socials: [],
 })
 
@@ -76,6 +78,7 @@ const getProduct = async (id: string) => {
   form.slug = store.product?.slug ?? ''
   form.category_id = store.product?.category_id ?? ''
   form.description = store.product?.description ?? ''
+  form.advantage = store.product?.advantage ?? ''
   form.socials = store.product?.socials ?? []
 }
 
@@ -94,6 +97,7 @@ const onSubmit = async () => {
         slug: form.slug,
         category_id: form.category_id,
         description: form.description,
+        advantage: form.advantage,
         image: store.product?.image,
         socials: form.socials,
       },
@@ -131,7 +135,7 @@ const addSocial = () => {
   isLink.value = true
 }
 
-const removeSocial = (id: number) => {
+const removeSocial = (id: string) => {
   form.socials = [...form.socials.filter((element) => element.id !== id)]
 }
 
@@ -158,6 +162,8 @@ onMounted(async () => {
             <ComponentInput title="Slug" v-model="form.slug" />
 
             <ComponentEditor title="Description" v-model="form.description" />
+
+            <ComponentEditor title="Advantage" v-model="form.advantage" />
 
             <ComponentFile title="Upload Image" @input="handleImageChange" />
 
