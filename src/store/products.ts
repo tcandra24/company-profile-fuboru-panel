@@ -36,8 +36,10 @@ const BUCKET_NAME = 'product-bucket'
 export const useProductStore = defineStore('products', () => {
   const products = ref<Product[]>([])
   const product = ref<Product>()
+  const isLoading = ref<boolean>(false)
 
   const fetch = async () => {
+    isLoading.value = true
     const { data, error } = await supabase.from(TABLE_NAME).select('*, category:category_id(name)')
 
     if (error) {
@@ -45,6 +47,7 @@ export const useProductStore = defineStore('products', () => {
     }
 
     products.value = data
+    isLoading.value = false
   }
 
   const show = async (id: string) => {
@@ -175,6 +178,7 @@ export const useProductStore = defineStore('products', () => {
   return {
     products,
     product,
+    isLoading,
     fetch,
     show,
     add,

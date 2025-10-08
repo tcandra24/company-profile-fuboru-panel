@@ -13,8 +13,10 @@ const TABLE_NAME = 'categories'
 export const useCategoryStore = defineStore('category', () => {
   const categories = ref<Category[]>([])
   const category = ref<Category>()
+  const isLoading = ref<boolean>(false)
 
   const fetch = async () => {
+    isLoading.value = true
     const { data, error } = await supabase.from(TABLE_NAME).select()
 
     if (error) {
@@ -22,6 +24,7 @@ export const useCategoryStore = defineStore('category', () => {
     }
 
     categories.value = data
+    isLoading.value = false
   }
 
   const show = async (id: string) => {
@@ -58,6 +61,7 @@ export const useCategoryStore = defineStore('category', () => {
   return {
     categories,
     category,
+    isLoading,
     fetch,
     show,
     add,

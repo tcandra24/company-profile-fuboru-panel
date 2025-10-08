@@ -15,7 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
       data: { session },
     } = await supabase.auth.getSession()
     user.value = session?.user
-      ? { email: session.user.email, name: session.user.user_metadata.name }
+      ? { email: session.user.email!, name: session.user.user_metadata.name! }
       : null
   }
 
@@ -39,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   supabase.auth.onAuthStateChange((_event, session) => {
     user.value = session?.user
-      ? { email: session.user.email, name: session.user.user_metadata.name }
+      ? { email: session.user.email!, name: session.user.user_metadata.name! }
       : null
   })
   loadSession()

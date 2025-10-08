@@ -63,7 +63,7 @@ onMounted(() => {
         <ComponentTable class="my-5">
           <template v-slot:header>
             <tr class="border-b border-gray-200 dark:border-gray-700">
-              <th class="px-5 py-3 text-left w-3/11 sm:px-6">
+              <th class="px-5 py-3 text-left w-2/32 sm:px-6">
                 <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">#</p>
               </th>
               <th class="px-5 py-3 text-left w-3/11 sm:px-6">
@@ -78,7 +78,22 @@ onMounted(() => {
             </tr>
           </template>
           <template v-slot:body>
+            <tr v-if="store.isLoading" v-for="index in 10" :key="index">
+              <td class="px-5 py-4 sm:px-6">
+                <div class="h-3 bg-gray-200 rounded-full dark:bg-gray-700 animate-pulse"></div>
+              </td>
+              <td class="px-5 py-4 sm:px-6">
+                <div class="h-3 bg-gray-200 rounded-full dark:bg-gray-700 animate-pulse"></div>
+              </td>
+              <td class="px-5 py-4 sm:px-6">
+                <div class="h-3 bg-gray-200 rounded-full dark:bg-gray-700 animate-pulse"></div>
+              </td>
+              <td class="px-5 py-4 sm:px-6">
+                <div class="h-3 bg-gray-300 rounded-sm dark:bg-gray-700 w-12 animate-pulse"></div>
+              </td>
+            </tr>
             <tr
+              v-else
               v-for="(product, index) in store.products"
               :key="product.id"
               class="border-t border-gray-100 dark:border-gray-800"
@@ -88,10 +103,10 @@ onMounted(() => {
               </td>
               <td class="px-5 py-4 sm:px-6">
                 <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 overflow-hidden rounded-full">
+                  <div class="w-10 h-10 overflow-hidden rounded-sm">
                     <img
                       class="object-cover"
-                      :src="`https://wzsfgaratnngbewlvmqf.supabase.co/storage/v1/object/public/product-bucket/${product.image}`"
+                      :src="`https://wzsfgaratnngbewlvmqf.supabase.co/storage/v1/object/public/product-bucket/${product.image ? product.image : 'default.webp'}`"
                       :alt="product.slug"
                     />
                   </div>

@@ -20,7 +20,7 @@ const store = useCategoryStore()
 const router = useRouter()
 const route = useRoute()
 
-const { id } = route.params
+const { id } = route.params as { id: string }
 
 const onSubmit = async () => {
   try {
@@ -35,8 +35,8 @@ const onSubmit = async () => {
 const getCategory = async (id: string) => {
   await store.show(id)
 
-  form.name = store.category.name
-  form.slug = store.category.slug
+  form.name = store.category?.name ?? ''
+  form.slug = store.category?.slug ?? ''
 }
 
 onMounted(() => {

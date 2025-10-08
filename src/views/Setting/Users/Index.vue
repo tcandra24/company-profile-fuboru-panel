@@ -1,5 +1,16 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+
+// import { ucwords } from '@/utils/helpers'
+
+import { useUserStore } from '@/store/users'
+
+const store = useUserStore()
+
+onMounted(() => {
+  store.fetch()
+})
 </script>
 <template>
   <admin-layout>

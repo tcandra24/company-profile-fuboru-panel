@@ -147,7 +147,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useField, useForm } from 'vee-validate'
 
-import { validationSchema } from '@/validation/auth/login'
+import { validationSchema } from '@/schema/auth/login'
 
 import { useAuthStore } from '@/store/auth'
 

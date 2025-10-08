@@ -25,7 +25,7 @@ const store = useProductStore()
 const router = useRouter()
 const route = useRoute()
 
-const { id } = route.params
+const { id } = route.params as { id: string }
 
 type Social = {
   id: string
@@ -98,7 +98,7 @@ const onSubmit = async () => {
         category_id: form.category_id,
         description: form.description,
         advantage: form.advantage,
-        image: store.product?.image,
+        image: store.product?.image ?? null,
         socials: form.socials,
       },
       { path: filePath, file: form.image },
@@ -174,7 +174,7 @@ onMounted(async () => {
       <div class="col-span-6 flex flex-col gap-4">
         <ComponentCard title="Image">
           <SingleImage
-            :image="`https://wzsfgaratnngbewlvmqf.supabase.co/storage/v1/object/public/product-bucket/${store.product?.image}`"
+            :image="`https://wzsfgaratnngbewlvmqf.supabase.co/storage/v1/object/public/product-bucket/${store.product?.image ? store.product?.image : 'default.webp'}`"
           />
         </ComponentCard>
         <ComponentCard title="Socials">

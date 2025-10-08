@@ -68,7 +68,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 
 const dropdownOpen = ref(false)
-const dropdownRef = ref(null)
+const dropdownRef = ref<HTMLElement | null>(null)
 
 const router = useRouter()
 
@@ -100,8 +100,8 @@ const signOut = async () => {
   }
 }
 
-const handleClickOutside = (event) => {
-  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+const handleClickOutside = (event: Event) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     closeDropdown()
   }
 }

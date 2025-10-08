@@ -19,7 +19,7 @@ const store = useCertificateStore()
 const router = useRouter()
 const route = useRoute()
 
-const { id } = route.params
+const { id } = route.params as { id: string }
 
 type Input = {
   name: string
@@ -61,7 +61,7 @@ const onSubmit = async () => {
         slug: form.slug,
         description_id: form.description_id,
         description_en: form.description_en,
-        image: store.certificate?.image,
+        image: store.certificate?.image ?? null,
       },
       { path: filePath, file: form.image },
     )

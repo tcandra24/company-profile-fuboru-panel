@@ -17,8 +17,10 @@ const BUCKET_NAME = 'certificate-bucket'
 export const useCertificateStore = defineStore('certificates', () => {
   const certificates = ref<Certificate[]>([])
   const certificate = ref<Certificate>()
+  const isLoading = ref<boolean>(false)
 
   const fetch = async () => {
+    isLoading.value = true
     const { data, error } = await supabase.from(TABLE_NAME).select('*')
 
     if (error) {
@@ -26,6 +28,7 @@ export const useCertificateStore = defineStore('certificates', () => {
     }
 
     certificates.value = data
+    isLoading.value = false
   }
 
   const show = async (id: string) => {
@@ -112,6 +115,7 @@ export const useCertificateStore = defineStore('certificates', () => {
   return {
     certificates,
     certificate,
+    isLoading,
     fetch,
     show,
     add,
