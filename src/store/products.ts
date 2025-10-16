@@ -40,7 +40,10 @@ export const useProductStore = defineStore('products', () => {
 
   const fetch = async () => {
     isLoading.value = true
-    const { data, error } = await supabase.from(TABLE_NAME).select('*, category:category_id(name)')
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*, category:category_id(name)')
+      .order('name', { ascending: true })
 
     if (error) {
       throw error

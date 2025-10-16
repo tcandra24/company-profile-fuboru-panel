@@ -17,7 +17,10 @@ export const useCategoryStore = defineStore('category', () => {
 
   const fetch = async () => {
     isLoading.value = true
-    const { data, error } = await supabase.from(TABLE_NAME).select()
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select()
+      .order('name', { ascending: true })
 
     if (error) {
       throw error

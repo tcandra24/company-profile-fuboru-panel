@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useField, useForm } from 'vee-validate'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ComponentCard from '@/components/common/ComponentCard.vue'
@@ -10,74 +11,78 @@ import ComponentFile from '@/components/forms/ComponentFile.vue'
 import SingleImage from '@/components/ui/images/SingleImage.vue'
 import Button from '@/components/ui/Button.vue'
 
+import { validationSchema } from '@/schema/master/certificate'
+
 import { useCertificateStore } from '@/store/certificates'
 
-const currentPageTitle = ref('Edit Product')
-
-const store = useCertificateStore()
+const { handleSubmit, errors } = useForm({
+  validationSchema,
+  initialValues: {
+    name: '',
+    slug: '',
+    image: null,
+    description_id: '',
+    description_en: '',
+  },
+})
 
 const router = useRouter()
 const route = useRoute()
 
 const { id } = route.params as { id: string }
 
-type Input = {
-  name: string
-  slug: string
-  image: File | null
-  description_id: string
-  description_en: string
-}
-
-const form = reactive<Input>({
-  name: '',
-  slug: '',
-  image: null,
-  description_id: '',
-  description_en: '',
-})
+const { value: name } = useField<string>('name')
+const { value: slug } = useField<string>('slug')
+const { value: image } = useField<File | null>('image')
+const { value: description_id } = useField<string>('description_id')
+const { value: description_en } = useField<string>('description_en')
 
 const getCertificate = async (id: string) => {
   await store.show(id)
 
-  form.name = store.certificate?.name ?? ''
-  form.slug = store.certificate?.slug ?? ''
-  form.description_id = store.certificate?.description_id ?? ''
-  form.description_en = store.certificate?.description_en ?? ''
+  name.value = store.certificate?.name ?? ''
+  slug.value = store.certificate?.slug ?? ''
+  description_id.value = store.certificate?.description_id ?? ''
+  description_en.value = store.certificate?.description_en ?? ''
 }
 
-const onSubmit = async () => {
+const currentPageTitle = ref('Edit Product')
+const store = useCertificateStore()
+
+const onSubmit = handleSubmit(async (value, { resetForm }) => {
   try {
     let filePath = ''
-    if (form.image) {
-      const extImage = form.image?.name.split('.').pop()
+    if (image.value) {
+      const extImage = image.value?.name.split('.').pop()
       filePath = `image_${Date.now()}.${extImage}`
     }
 
     await store.update(
       id,
       {
-        name: form.name,
-        slug: form.slug,
-        description_id: form.description_id,
-        description_en: form.description_en,
+        name: name.value,
+        slug: slug.value,
+        description_id: description_id.value,
+        description_en: description_en.value,
         image: store.certificate?.image ?? null,
       },
-      { path: filePath, file: form.image },
+      { path: filePath, file: image.value },
     )
 
     router.push({ name: 'master.certificates.index' })
   } catch (error) {
     console.log(error)
+  } finally {
+    resetForm()
   }
-}
+})
 
 const handleImageChange = (event: Event) => {
   const inputElement = event.target as HTMLInputElement
   if (inputElement.files && inputElement.files.length > 0) {
-    form.image = inputElement.files[0]
+    image.value = inputElement.files[0]
   } else {
-    form.image = null
+    image.value = null
   }
 }
 
@@ -92,19 +97,21 @@ onMounted(() => {
       <div class="col-span-6">
         <ComponentCard title="Edit Product">
           <form class="space-y-6" @submit.prevent="onSubmit">
-            <ComponentInput title="Name" v-model="form.name" />
+            <ComponentInput title="Name" v-model="name" :error="errors.name" />
 
-            <ComponentInput title="Slug" v-model="form.slug" />
+            <ComponentInput title="Slug" v-model="slug" :error="errors.slug" />
 
             <ComponentTextArea
               title="Description ID"
-              v-model="form.description_id"
+              v-model="description_id"
+              :error="errors.description_id"
               placeholder="Enter a description ID.."
             />
 
             <ComponentTextArea
               title="Description EN"
-              v-model="form.description_en"
+              v-model="description_en"
+              :error="errors.description_en"
               placeholder="Enter a description EN.."
             />
 
@@ -117,7 +124,7 @@ onMounted(() => {
       <div class="col-span-6">
         <ComponentCard title="Image">
           <SingleImage
-            :image="`https://wzsfgaratnngbewlvmqf.supabase.co/storage/v1/object/public/certificate-bucket/${store.certificate?.image}`"
+            :image="`https://wzsfgaratnngbewlvmqf.supabase.co/storage/v1/object/public/certificate-bucket/${store.certificate?.image ? store.certificate?.image : 'default.webp'}`"
           />
         </ComponentCard>
       </div>

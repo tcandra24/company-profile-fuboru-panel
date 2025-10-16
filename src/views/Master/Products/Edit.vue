@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useField, useForm } from 'vee-validate'
 import PageBreadcrumb from '@/components/common/PageBreadcrumb.vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import ComponentCard from '@/components/common/ComponentCard.vue'
@@ -10,22 +11,14 @@ import ComponentFile from '@/components/forms/ComponentFile.vue'
 import ComponentSelect from '@/components/forms/ComponentSelect.vue'
 import SingleImage from '@/components/ui/images/SingleImage.vue'
 
+import { validationSchema } from '@/schema/master/product'
+
 import Button from '@/components/ui/Button.vue'
 import Alert from '@/components/ui/Alert.vue'
 
 import { useCategoryStore } from '@/store/categories'
 import { useProductStore } from '@/store/products'
 import { ucwords } from '@/utils/helpers'
-
-const currentPageTitle = ref('Edit Product')
-
-const storeCategory = useCategoryStore()
-const store = useProductStore()
-
-const router = useRouter()
-const route = useRoute()
-
-const { id } = route.params as { id: string }
 
 type Social = {
   id: string
@@ -34,29 +27,40 @@ type Social = {
   embeded_code: string
 }
 
-type Input = {
-  name: string
-  slug: string
-  image: File | null
-  category_id: string
-  description: string
-  advantage: string
-  socials: Social[]
-}
-
 type SocialMedia = {
   name: string
 }
 
-const form = reactive<Input>({
-  name: '',
-  slug: '',
-  image: null,
-  category_id: '',
-  description: '',
-  advantage: '',
-  socials: [],
+const currentPageTitle = ref('Edit Product')
+
+const { handleSubmit, errors } = useForm({
+  validationSchema,
+  initialValues: {
+    name: '',
+    slug: '',
+    image: null,
+    category_id: '',
+    description: '',
+    advantage: '',
+    socials: [],
+  },
 })
+
+const { value: name } = useField<string>('name')
+const { value: slug } = useField<string>('slug')
+const { value: image } = useField<File | null>('image')
+const { value: category_id } = useField<string>('category_id')
+const { value: description } = useField<string>('description')
+const { value: advantage } = useField<string>('advantage')
+const { value: socials } = useField<Social[]>('socials')
+
+const storeCategory = useCategoryStore()
+const store = useProductStore()
+
+const router = useRouter()
+const route = useRoute()
+
+const { id } = route.params as { id: string }
 
 const selectedSocial = ref<string>('instagram')
 const socialMedia = ref<string>('')
@@ -74,54 +78,56 @@ const social_medias = ref<SocialMedia[]>([
 const getProduct = async (id: string) => {
   await store.show(id)
 
-  form.name = store.product?.name ?? ''
-  form.slug = store.product?.slug ?? ''
-  form.category_id = store.product?.category_id ?? ''
-  form.description = store.product?.description ?? ''
-  form.advantage = store.product?.advantage ?? ''
-  form.socials = store.product?.socials ?? []
+  name.value = store.product?.name ?? ''
+  slug.value = store.product?.slug ?? ''
+  category_id.value = store.product?.category_id ?? ''
+  description.value = store.product?.description ?? ''
+  advantage.value = store.product?.advantage ?? ''
+  socials.value = store.product?.socials ?? []
 }
 
-const onSubmit = async () => {
+const onSubmit = handleSubmit(async (value, { resetForm }) => {
   try {
     let filePath = ''
-    if (form.image) {
-      const extImage = form.image?.name.split('.').pop()
+    if (value.image) {
+      const extImage = value.image?.name.split('.').pop()
       filePath = `image_${Date.now()}.${extImage}`
     }
 
     await store.update(
       id,
       {
-        name: form.name,
-        slug: form.slug,
-        category_id: form.category_id,
-        description: form.description,
-        advantage: form.advantage,
+        name: value.name,
+        slug: value.slug,
+        category_id: value.category_id,
+        description: value.description,
+        advantage: value.advantage,
         image: store.product?.image ?? null,
-        socials: form.socials,
+        socials: value.socials,
       },
-      { path: filePath, file: form.image },
+      { path: filePath, file: value.image },
     )
 
     router.push({ name: 'master.products.index' })
   } catch (error) {
     console.log(error)
+  } finally {
+    resetForm()
   }
-}
+})
 
 const handleImageChange = (event: Event) => {
   const inputElement = event.target as HTMLInputElement
   if (inputElement.files && inputElement.files.length > 0) {
-    form.image = inputElement.files[0]
+    image.value = inputElement.files[0]
   } else {
-    form.image = null
+    image.value = null
   }
 }
 
 const addSocial = () => {
-  form.socials = [
-    ...form.socials,
+  socials.value = [
+    ...socials.value,
     {
       id: Date.now() + '',
       name: selectedSocial.value,
@@ -136,7 +142,7 @@ const addSocial = () => {
 }
 
 const removeSocial = (id: string) => {
-  form.socials = [...form.socials.filter((element) => element.id !== id)]
+  socials.value = [...socials.value.filter((element) => element.id !== id)]
 }
 
 onMounted(async () => {
@@ -151,19 +157,23 @@ onMounted(async () => {
       <div class="col-span-6">
         <ComponentCard title="Edit Product">
           <form class="space-y-6" @submit.prevent="onSubmit">
-            <ComponentInput title="Name" v-model="form.name" />
+            <ComponentInput title="Name" v-model="name" :error="errors.name" />
 
-            <ComponentSelect title="Category" v-model="form.category_id">
+            <ComponentSelect title="Category" v-model="category_id" :error="errors.category_id">
               <template v-for="category of storeCategory.categories" :key="category.id">
                 <option :value="category.id">{{ ucwords(category.name) }}</option>
               </template>
             </ComponentSelect>
 
-            <ComponentInput title="Slug" v-model="form.slug" />
+            <ComponentInput title="Slug" v-model="slug" :error="errors.slug" />
 
-            <ComponentEditor title="Description" v-model="form.description" />
+            <ComponentEditor
+              title="Description"
+              v-model="description"
+              :error="errors.description"
+            />
 
-            <ComponentEditor title="Advantage" v-model="form.advantage" />
+            <ComponentEditor title="Advantage" v-model="advantage" :error="errors.advantage" />
 
             <ComponentFile title="Upload Image" @input="handleImageChange" />
 
@@ -268,11 +278,11 @@ onMounted(async () => {
         </ComponentCard>
         <ComponentCard title="List Social">
           <ul
-            v-if="form.socials.length > 0"
+            v-if="socials.length > 0"
             role="list"
             class="divide-y divide-gray-200 dark:divide-gray-700"
           >
-            <li v-for="(social, index) in form.socials" :key="index" class="py-3 sm:py-4">
+            <li v-for="(social, index) in socials" :key="index" class="py-3 sm:py-4">
               <div class="flex items-center">
                 <div class="flex-1 min-w-0 ms-4">
                   <p class="text-sm font-medium text-gray-900 truncate dark:text-white">

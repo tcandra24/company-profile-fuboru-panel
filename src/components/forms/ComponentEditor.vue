@@ -6,6 +6,7 @@ import { Editor, EditorContent } from '@tiptap/vue-3'
 const props = defineProps({
   modelValue: String,
   title: String,
+  error: String,
 })
 
 const editor = ref<Editor>()
@@ -195,9 +196,15 @@ onBeforeUnmount(() => {
         <label for="wysiwyg-alignment-example" class="sr-only">{{ title }}</label>
         <editor-content
           class="block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400"
+          :class="[
+            error
+              ? 'border-error-300 focus:border-error-300 dark:border-error-700 dark:focus:border-error-800'
+              : 'border-gray-300 focus:border-brand-300 dark:border-gray-700 dark:focus:border-brand-800',
+          ]"
           v-if="editor"
           :editor="editor"
         />
+        <p class="mt-1.5 text-theme-xs text-error-500">{{ error }}</p>
       </div>
     </div>
   </div>
