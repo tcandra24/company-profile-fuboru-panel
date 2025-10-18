@@ -8,6 +8,12 @@ const socialSchema = zod.object({
   embeded_code: zod.string(),
 })
 
+const compatibleSchema = zod.object({
+  id: zod.string(),
+  brand_id: zod.string(),
+  types: zod.string(),
+})
+
 export const validationSchema = toTypedSchema(
   zod.object({
     name: zod.string().min(1, { message: 'This is required' }),
@@ -17,5 +23,6 @@ export const validationSchema = toTypedSchema(
     description: zod.string().min(1, { message: 'This is required' }),
     advantage: zod.string().min(1, { message: 'This is required' }),
     socials: zod.array(socialSchema),
+    compatibles: zod.array(compatibleSchema),
   }),
 )

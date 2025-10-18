@@ -9,6 +9,8 @@ import ComponentInput from '@/components/forms/ComponentInput.vue'
 import ComponentEditor from '@/components/forms/ComponentEditor.vue'
 import ComponentFile from '@/components/forms/ComponentFile.vue'
 import ComponentSelect from '@/components/forms/ComponentSelect.vue'
+import ComponentTextArea from '@/components/forms/ComponentTextArea.vue'
+import ComponentTable from '@/components/tables/ComponentTable.vue'
 import SingleImage from '@/components/ui/images/SingleImage.vue'
 
 import { validationSchema } from '@/schema/master/product'
@@ -18,6 +20,7 @@ import Alert from '@/components/ui/Alert.vue'
 
 import { useCategoryStore } from '@/store/categories'
 import { useProductStore } from '@/store/products'
+import { useBrandStore } from '@/store/brands'
 import { ucwords } from '@/utils/helpers'
 
 type Social = {
@@ -25,6 +28,12 @@ type Social = {
   name: string
   link: string
   embeded_code: string
+}
+
+type Compatible = {
+  id: string
+  brand_id: string
+  types: string
 }
 
 type SocialMedia = {
@@ -43,6 +52,7 @@ const { handleSubmit, errors } = useForm({
     description: '',
     advantage: '',
     socials: [],
+    compatibles: [],
   },
 })
 
@@ -53,8 +63,10 @@ const { value: category_id } = useField<string>('category_id')
 const { value: description } = useField<string>('description')
 const { value: advantage } = useField<string>('advantage')
 const { value: socials } = useField<Social[]>('socials')
+const { value: compatibles } = useField<Compatible[]>('compatibles')
 
 const storeCategory = useCategoryStore()
+const storeBrand = useBrandStore()
 const store = useProductStore()
 
 const router = useRouter()
@@ -62,9 +74,14 @@ const route = useRoute()
 
 const { id } = route.params as { id: string }
 
+// Social Media
 const selectedSocial = ref<string>('instagram')
 const socialMedia = ref<string>('')
 const isLink = ref(true)
+
+// Compatible Input
+const selectedBrand = ref<string>('')
+const productType = ref<string>('')
 
 const social_medias = ref<SocialMedia[]>([
   {
@@ -84,6 +101,7 @@ const getProduct = async (id: string) => {
   description.value = store.product?.description ?? ''
   advantage.value = store.product?.advantage ?? ''
   socials.value = store.product?.socials ?? []
+  compatibles.value = store.product?.compatible ?? []
 }
 
 const onSubmit = handleSubmit(async (value, { resetForm }) => {
@@ -104,6 +122,7 @@ const onSubmit = handleSubmit(async (value, { resetForm }) => {
         advantage: value.advantage,
         image: store.product?.image ?? null,
         socials: value.socials,
+        compatibles: value.compatibles,
       },
       { path: filePath, file: value.image },
     )
@@ -141,12 +160,31 @@ const addSocial = () => {
   isLink.value = true
 }
 
+const addCompatible = () => {
+  compatibles.value = [
+    ...compatibles.value,
+    {
+      id: Date.now() + '',
+      brand_id: selectedBrand.value,
+      types: productType.value,
+    },
+  ]
+
+  selectedBrand.value = ''
+  productType.value = ''
+}
+
 const removeSocial = (id: string) => {
   socials.value = [...socials.value.filter((element) => element.id !== id)]
 }
 
+const removeCompatible = (id: string) => {
+  compatibles.value = [...compatibles.value.filter((element) => element.id !== id)]
+}
+
 onMounted(async () => {
   await storeCategory.fetch()
+  await storeBrand.fetch()
   await getProduct(id)
 })
 </script>
@@ -182,6 +220,88 @@ onMounted(async () => {
         </ComponentCard>
       </div>
       <div class="col-span-6 flex flex-col gap-4">
+        <ComponentCard title="Compatible">
+          <div class="flex gap-5">
+            <div class="w-1/4">
+              <ComponentSelect title="Brand" v-model="selectedBrand" error="">
+                <template v-for="brand of storeBrand.brands" :key="brand.id">
+                  <option :value="brand.id">{{ ucwords(brand.name) }}</option>
+                </template>
+              </ComponentSelect>
+            </div>
+            <div class="w-3/4">
+              <ComponentTextArea
+                title="Types"
+                v-model="productType"
+                error=""
+                placeholder="e.g Vario,Mio,Ninja"
+              />
+            </div>
+          </div>
+
+          <Button size="md" variant="primary" @click="addCompatible"> Add </Button>
+
+          <div class="my-5">
+            <ComponentTable class="my-5">
+              <template v-slot:header>
+                <tr class="border-b border-gray-200 dark:border-gray-700">
+                  <th class="px-5 py-3 text-left w-2/32 sm:px-6">
+                    <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">#</p>
+                  </th>
+                  <th class="px-5 py-3 text-left w-3/11 sm:px-6">
+                    <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Brand</p>
+                  </th>
+                  <th class="px-5 py-3 text-left w-2/11 sm:px-6">
+                    <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Types</p>
+                  </th>
+                  <th class="px-5 py-3 text-left w-2/11 sm:px-6">
+                    <p class="font-medium text-gray-500 text-theme-xs dark:text-gray-400">Action</p>
+                  </th>
+                </tr>
+              </template>
+              <template v-slot:body>
+                <tr
+                  v-if="compatibles.length > 0"
+                  v-for="(compatible, index) in compatibles"
+                  :key="compatible.id"
+                  class="border-t border-gray-100 dark:border-gray-800"
+                >
+                  <td class="px-5 py-4 sm:px-6">
+                    <p class="text-gray-500 text-theme-sm dark:text-gray-400">{{ index + 1 }}</p>
+                  </td>
+                  <td class="px-5 py-4 sm:px-6">
+                    <p class="text-gray-500 text-theme-sm dark:text-gray-400">
+                      {{
+                        storeBrand.brands.find((element) => element.id === compatible.brand_id)!
+                          .name
+                      }}
+                    </p>
+                  </td>
+                  <td class="px-5 py-4 sm:px-6">
+                    <p class="text-gray-500 text-theme-sm dark:text-gray-400">
+                      {{ compatible.types }}
+                    </p>
+                  </td>
+                  <td class="px-5 py-4 sm:px-6">
+                    <Button size="sm" variant="outline" @click="removeCompatible(compatible.id)">
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
+                <tr v-else>
+                  <td colspan="4" class="px-5 py-4 sm:px-6">
+                    <Alert
+                      variant="info"
+                      title="Empty"
+                      message="Compatibles Data is Empty"
+                      :showLink="false"
+                    />
+                  </td>
+                </tr>
+              </template>
+            </ComponentTable>
+          </div>
+        </ComponentCard>
         <ComponentCard title="Image">
           <SingleImage
             :image="`https://wzsfgaratnngbewlvmqf.supabase.co/storage/v1/object/public/product-bucket/${store.product?.image ? store.product?.image : 'default.webp'}`"
