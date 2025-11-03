@@ -130,14 +130,6 @@ const router = createRouter({
                 requiresAuth: true,
               },
             },
-            {
-              path: 'edit/:slug',
-              name: 'setting.users.edit',
-              component: () => import('@/views/Setting/Users/Edit.vue'),
-              meta: {
-                requiresAuth: true,
-              },
-            },
           ],
         },
       ],
